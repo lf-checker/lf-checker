@@ -2,29 +2,30 @@
 #import yaml
 import os
 import sys
-#sys.path.append("/home/tong.wu/.local/lib/python3.6/site-packages")
+#from b import *
+#from findall import *
+
+dep = str(os.path.split(os.path.abspath(__file__))[0]) + '/dependencies'
+sys.path.append(dep)
 from program_feature import *
 #import pandas as pd
-#from sklearn.ensemble import RandomForestClassifier
-#from sklearn.model_selection import train_test_split
-#from sklearn.metrics import accuracy_score
 import pickle
 
 def predict(vectors, model):
-# print(model)
  loaded_model = pickle.load(open(model, 'rb'))
- #print(loaded_model)
  score = 5
  final_vector = []
  for vector in vectors:
-  #print(vector)
   new_score = loaded_model.predict([vector])
- # print(new_score)
   if new_score < score:
    score = new_score
    final_vector = vector
-# print(final_vector)
-# print(score)
+ 
+ #vector_tran = final_vector
+ #vector_tran[-3] = 1 
+ #if score <= 3 and score == loaded_model.predict([vector_tran]):
+  #return vector_tran
+ print("predicted: "+ str(score))
  return final_vector
 
 def get_program_feature(file):
@@ -35,18 +36,23 @@ def get_file_from_yaml(yaml_file):
  with open(file, "r") as stream:
   dataMap = yaml.safe_load(stream)
  return dataMap['input_files']
-  #bechmarks.append(dir + '/' + dataMap["input_files"])
  
 def construct_feature_vector(feature):
  vector = []
  vector.append(feature.thread_create_num)
- vector.append(feature.max_thread_create_nested)
+ vector.append(feature.max_thread_num)
  vector.append(feature.thread_join_num)
- vector.append(feature.max_thread_join_nested)
+ vector.append(feature.max_join_num)
+ vector.append(feature.pthread_mutex)
+ vector.append(feature.atomic)
  vector.append(feature.min_val_access_num)
  vector.append(feature.min_val_access_times)
  vector.append(feature.min_func_call_num)
  vector.append(feature.min_func_call_times)
+ vector.append(feature.operator_num_inif)
+ vector.append(feature.max_iter)
+ vector.append(feature.nondet_num)
+ vector.append(feature.max_loops)
  return vector
 
 def get_commands(vector):
@@ -58,35 +64,36 @@ def get_commands(vector):
  k_step = ['1 ', '4 ', '64 ']
  max_step = ['50 ', '200 ', '1600 ']
  unwind = ['10 ', '40 ']
- if vector[8] != -1:
-  commands += solver[vector[8]]
+ length = len(vector)
+ if vector[length-10] != -1:
+  commands += solver[vector[length-10]]
 
- if vector[9] != -1: 
-  commands += encoding[vector[9]]
- if vector[10] != -1:
+ if vector[length-9] != -1: 
+  commands += encoding[vector[length-9]]
+ if vector[length-8] != -1:
   commands += '--context-bound '
-  commands += context_bound[vector[10] - 2]
+  commands += context_bound[vector[length-8] - 2]
 # return commands
- if vector[11] == 1:
-  commands += strategy[vector[11] - 1]
+ if vector[length-7] == 1:
+  commands += strategy[vector[length-7] - 1]
   commands += '--k-step '
-  commands += k_step[vector[12] - 1]
+  commands += k_step[vector[length-6] - 1]
   commands += '--max-k-step '
-  commands += max_step[vector[12] - 1]
+  commands += max_step[vector[length-6] - 1]
  else:
   commands += '--unwind '
-  commands += str(vector[13]) + ' '
+  commands += str(vector[length-5]) + ' '
 
- if vector[14] != -1:
+ if vector[length-4] != -1:
   commands += '--no-por '
 
- if vector[15] != -1:
+ if vector[length-3] != -1:
   commands += '--no-goto-merge '
 
- if vector[16] != -1:
+ if vector[length-2] != -1:
   commands += '--state-hashing '
 
- if vector[17] != -1:
+ if vector[length-1] != -1:
   commands += '--add-symex-value-sets '
  return commands  
 
@@ -159,34 +166,50 @@ def flag_predicts(benchmark, model):
            vector.append(m)
            vector.append(op33)
            vector.append(op44)
-         # vector.append(h)
-          #if g == 1:
-          # vector.append(1)
-          #elif g == 4:
-          # vector.append(2)
-          #elif g == 64:
-           #vector.append(3)
-          #vector.append(-1)
-          #vector.append(i)
            vectors.append(vector)
            num += 1
-#for ve in vectors:
-# print (ve)
-
-#print(num)
-#exit(0)
- #print(sys.argv[1])
  options = predict(vectors, model)
- #print(options)
-#exit(0)
-#options = [3, 0, 3, 0, 2, 9, 2, 6, 0, 2, 5, 2, 3, -1, 0]
-#ptions = [2, 0, 2, 0, 1, 3, 0, 0, 0, 1, 2, 2, 2, 10, 1, 1]
  commands = get_commands(options)
- return commands
- #for i in sys.argv[2:-1]:
-  #commands = commands + i + ' '   
- #commands = commands + sys.argv[-1]
- #print(commands)
-#exit(0)
- #run(commands)
- #print(commands)
+ return commands, options
+ 
+if __name__ == "__main__":
+ files = findall()
+ #print(files)
+ #exit(0)
+ list1, list2, list3 = data_lists('../../1025/rawData1.csv')
+ #print(len(list3))
+ correct = 0
+ incorrect = 0
+ incorrect_list = []
+ for file in files:
+  filel = []
+  filel.append(file)
+  if list3.count(filel) != 0:
+   fullfile = '../../../benchmarks/2022/' + file
+   com, flags = flag_predicts(fullfile, sys.argv[1])
+   flags.insert(0,file)
+   print(flags)
+   #com, flags = flag_predicts(sys.argv[1])
+   result = deter_verdit(flags, list1, list2)
+   print("actual: "+ str(result))
+   if result == 5:
+    incorrect_list.append(flags)
+    incorrect += 1
+   elif result < 3:
+    correct += 1
+  print('correct: ' + str(correct))
+  print('incorrect: ' + str(incorrect))
+  print('')
+ for item in incorrect_list:
+  print(item)
+ exit(0)
+ com, flags = flag_predicts(sys.argv[1], sys.argv[2])
+ print(com)
+ print(flags)
+ benchmark = sys.argv[1]
+ benchmark = benchmark[benchmark.index("sv-benchmarks"):]
+ print(benchmark)
+ flags.insert(0,benchmark)
+ print(flags)
+ result = deter_verdit(flags, list1, list2) 
+ print(result)
