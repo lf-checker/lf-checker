@@ -6,6 +6,10 @@ The public location of ESBMCs source is on github:
 
     https://github.com/esbmc/esbmc
 
+usage: wit4java [-h] [--packages [PACKAGE_PATHS [PACKAGE_PATHS ...]]]
+                --witness WITNESS_FILE [--version]
+                benchmark
+                
 ### Authors
 Tong Wu (University of Manchester, United Kingdom) wutonguom@gmail.com
 
