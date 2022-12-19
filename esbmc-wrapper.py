@@ -7,7 +7,10 @@ import subprocess
 import time
 import sys
 import resource
+from hashlib import sha256
+import datetime
 from predictor import *
+
 # Start time for this script
 start_time = time.time()
 SVCOMP_EXTRA_VERSION = " svcomp 0"
@@ -239,8 +242,9 @@ def get_command_line(strat, prop, arch, benchmark, concurrency, dargs, concurren
       command_line += " --no-por "
     #command_line += "--no-slice " # TODO: Witness validation is only working without slicing
     else:
-      flags = flag_predicts(benchmark, concurrency_flag_predict)
+      flags, opts = flag_predicts(benchmark, concurrency_flag_predict)
       command_line += flags
+      command_line += "--no-slice "
   # Add witness arg
   command_line += "--witness-output " + os.path.basename(benchmark) + ".graphml "
   # Special case for termination, it runs regardless of the strategy
@@ -293,6 +297,34 @@ def verify(strat, prop, concurrency, dargs, concurrency_flag_predict):
   # Parse output
   return res
 
+
+def witness_to_sha256(benchmark):
+  try:
+    sha256hash = ''
+    with open(benchmark, 'r') as f:
+      data = f.read().encode('utf-8')
+      sha256hash = sha256(data).hexdigest()
+    witness = os.path.basename(benchmark) + ".graphml"
+  
+    fin = open(witness, "rt")
+    data = fin.readlines()
+    fin.close()
+  
+    fin = open(witness, "wt")
+    for line in data:
+      if '<data key="programhash">' in line:
+        line = line.replace(line[line.index('>')+1:line.index('</data>')], sha256hash)
+      
+      if '<data key="creationtime">' in line:
+        time = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        line = line.replace(line[line.index('>')+1:line.index('</data>')], time)
+      fin.write(line)
+    fin.close()
+    return
+    
+  except:
+    print("No witness")
+  
 # Options
 parser = argparse.ArgumentParser()
 parser.add_argument("-a", "--arch", help="Either 32 or 64 bits", type=int, choices=[32, 64], default=32)
@@ -346,4 +378,5 @@ else:
   exit(1)
 
 result = verify(strategy, category_property, concurrency, esbmc_dargs, concurrency_flag_predict)
+witness_to_sha256(benchmark)
 print(get_result_string(result))
