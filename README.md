@@ -6,5 +6,10 @@ The public location of ESBMCs source is on github:
 
     https://github.com/esbmc/esbmc
 
+### Authors
+Tong Wu (University of Manchester, United Kingdom) wutonguom@gmail.com
+
+Lucas Cordeiro (University of Manchester, United Kingdom) lucas.cordeiro@manchester.ac.uk
+
 ### Links
 - [Benchexec Tool Info Module](https://github.com/sosy-lab/benchexec/blob/main/benchexec/tools/esbmc.py)
