@@ -1,0 +1,25 @@
+Agent: BMC tool.
+
+Action: Decisions of unrolling depth to run the program.
+
+Environment: Takes an action and returns the reward.
+
+State: Current depth, verification result & time, history, program AST, cpu / memory usage..
+
+Reward: Feedback of the action. 
+
+E. g. :
+
+small bound & verification failure: +5
+
+Large bound & verification failure: +1
+
+Large bound & unwinding assertion: -1
+
+Small bound & unwinding assertion: -5
+
+Discount factor
+
+Policy: Decide which action to take to maximise reward (or greedy policy).
+
+Value: Estimated reward of the state (Or use Neural Networks to predict value function).
