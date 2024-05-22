@@ -39,6 +39,7 @@ class BMCEnvironment:
 if __name__ == "__main__":
     initial_state = BMCState(
         current_depth=0,
+        unwindset={},
         verification_result=None,
         verification_time=0,
         history=[],
@@ -48,8 +49,14 @@ if __name__ == "__main__":
     )
     env = BMCEnvironment(initial_state)
     policy = "policy"
+    loops = ut.get_loops("cbmc", "test_main.c")
     agent = BMCAgent(policy)
-    command = agent.select_action(initial_state)
+    unwindset = agent.select_action(initial_state, loops)
+    unwindset = agent.config_bounds(initial_state)
+    print(unwindset)
+    command = "deagle ../tests/test_main.c "
+    command += unwindset
+    print(command)
     # command = "deagle ../tests/test_main.c --unwind 5"
     next_state, reward, done = env.step(command)
     print(next_state)
