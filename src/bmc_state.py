@@ -2,6 +2,7 @@ class BMCState:
     def __init__(
         self,
         current_depth,
+        unwindset,
         verification_result,
         verification_time,
         history,
@@ -10,6 +11,7 @@ class BMCState:
         memory_usage,
     ):
         self.current_depth = current_depth
+        self.unwindset = unwindset
         self.verification_result = verification_result
         self.verification_time = verification_time
         self.history = history
@@ -22,6 +24,7 @@ class BMCState:
         return (
             isinstance(other, BMCState)
             and self.current_depth == other.current_depth
+            and self.unwindset == other.unwindset
             and self.verification_result == other.verification_result
             and self.verification_time == other.verification_time
             and self.history == other.history
@@ -35,6 +38,7 @@ class BMCState:
         return hash(
             (
                 self.current_depth,
+                self.unwindset,
                 self.verification_result,
                 self.verification_time,
                 tuple(self.history),
@@ -47,7 +51,7 @@ class BMCState:
     def __repr__(self):
         """String representation of the state."""
         return (
-            f"State(depth={self.current_depth}, verification={self.verification_result}, "
+            f"State(unwindset={self.unwindset}, verification={self.verification_result}, "
             f"time={self.verification_time}, history={self.history}, program_ast={self.program_ast}, "
             f"cpu={self.cpu_usage}, memory={self.memory_usage})"
         )
